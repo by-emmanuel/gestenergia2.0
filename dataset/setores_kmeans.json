@@ -1,0 +1,93 @@
+{
+  "clientes_na_base": 370,
+  "clientes_completos": 340,
+  "candidatos": 190,
+  "faixa_de_escala": [
+    0.1,
+    1.5
+  ],
+  "media_da_producao_kwh": 27.39,
+  "grupos": 3,
+  "semente": 42,
+  "atributos_do_kmeans": 48,
+  "correcoes_de_horario_de_verao": {
+    "dia_que_perdeu_uma_hora": "2014-03-30",
+    "periodos_interpolados": 760,
+    "celulas_zeradas_antes": 480,
+    "dia_que_ganhou_uma_hora": "2014-10-26",
+    "periodos_divididos_por_2": 760,
+    "restou_algum_nan": false
+  },
+  "percentil_do_limite": 0.99,
+  "meses_de_treino": 10,
+  "setores": {
+    "administrativo": {
+      "cliente": "MT_013",
+      "grupo_kmeans": 0,
+      "clientes_no_grupo": 16,
+      "csv": "data/setores/administrativo.csv",
+      "tem_fator_potencia": false,
+      "limite_consumo_kwh": 46.642,
+      "media_kwh": 20.536,
+      "media_no_teste_kwh": 18.971,
+      "maximo_kwh": 55.141,
+      "periodos": 35040,
+      "periodos_de_treino": 29184,
+      "acima_do_limite_no_ano": 389,
+      "acima_do_limite_pct": 1.11,
+      "alertas_por_semana": 7.5
+    },
+    "manutencao": {
+      "cliente": "MT_286",
+      "grupo_kmeans": 1,
+      "clientes_no_grupo": 94,
+      "csv": "data/setores/manutencao.csv",
+      "tem_fator_potencia": false,
+      "limite_consumo_kwh": 46.564,
+      "media_kwh": 29.598,
+      "media_no_teste_kwh": 30.173,
+      "maximo_kwh": 51.479,
+      "periodos": 35040,
+      "periodos_de_treino": 29184,
+      "acima_do_limite_no_ano": 269,
+      "acima_do_limite_pct": 0.77,
+      "alertas_por_semana": 5.2
+    },
+    "utilidades": {
+      "cliente": "MT_060",
+      "grupo_kmeans": 2,
+      "clientes_no_grupo": 80,
+      "csv": "data/setores/utilidades.csv",
+      "tem_fator_potencia": false,
+      "limite_consumo_kwh": 11.959,
+      "media_kwh": 6.647,
+      "media_no_teste_kwh": 7.153,
+      "maximo_kwh": 14.98,
+      "periodos": 35040,
+      "periodos_de_treino": 29184,
+      "acima_do_limite_no_ano": 329,
+      "acima_do_limite_pct": 0.94,
+      "alertas_por_semana": 6.3
+    },
+    "producao": {
+      "cliente": null,
+      "grupo_kmeans": null,
+      "clientes_no_grupo": null,
+      "csv": "data/bruto/Steel_industry_data.csv",
+      "tem_fator_potencia": true,
+      "limite_consumo_kwh": 122.98,
+      "media_kwh": 27.387,
+      "media_no_teste_kwh": 24.873,
+      "maximo_kwh": 157.18,
+      "periodos": 35040,
+      "periodos_de_treino": 29184,
+      "acima_do_limite_no_ano": 337,
+      "acima_do_limite_pct": 0.96,
+      "alertas_por_semana": 6.5
+    }
+  },
+  "graficos": [
+    "docs/graficos/setores_perfis_kmeans.png",
+    "docs/graficos/setores_horario_de_verao.png"
+  ]
+}

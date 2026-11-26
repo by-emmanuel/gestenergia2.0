@@ -1,0 +1,230 @@
+{
+  "versao_scikit_learn": "1.5.2",
+  "semente": 42,
+  "atributos": [
+    "hora",
+    "minuto",
+    "dia_semana",
+    "mes",
+    "fim_de_semana",
+    "lag_1",
+    "lag_2",
+    "lag_3",
+    "lag_4"
+  ],
+  "alvo": "Usage_kWh",
+  "setores": {
+    "producao": [
+      {
+        "algoritmo": "Random Forest",
+        "segundos_de_treino": 1.0,
+        "ms_por_previsao": 12.34,
+        "mb_do_pkl": 230.8,
+        "mae_kwh": 4.5752,
+        "mae_percentual": 18.39,
+        "rmse": 9.2219,
+        "r2": 0.9123
+      },
+      {
+        "algoritmo": "Gradient Boosting",
+        "segundos_de_treino": 1.7,
+        "ms_por_previsao": 0.23,
+        "mb_do_pkl": 0.2,
+        "mae_kwh": 5.0315,
+        "mae_percentual": 20.23,
+        "rmse": 9.5194,
+        "r2": 0.9065
+      },
+      {
+        "algoritmo": "Ingenuo (repete o anterior)",
+        "segundos_de_treino": 0.0,
+        "ms_por_previsao": 0.0,
+        "mb_do_pkl": 0.0,
+        "mae_kwh": 5.1966,
+        "mae_percentual": 20.89,
+        "rmse": 11.8455,
+        "r2": 0.8553
+      },
+      {
+        "algoritmo": "Regressao Linear",
+        "segundos_de_treino": 0.0,
+        "ms_por_previsao": 0.19,
+        "mb_do_pkl": 0.0,
+        "mae_kwh": 5.9309,
+        "mae_percentual": 23.85,
+        "rmse": 11.6377,
+        "r2": 0.8603
+      },
+      {
+        "algoritmo": "Arvore de Decisao",
+        "segundos_de_treino": 0.1,
+        "ms_por_previsao": 0.19,
+        "mb_do_pkl": 3.6,
+        "mae_kwh": 6.234,
+        "mae_percentual": 25.06,
+        "rmse": 13.4349,
+        "r2": 0.8138
+      }
+    ],
+    "administrativo": [
+      {
+        "algoritmo": "Gradient Boosting",
+        "segundos_de_treino": 1.4,
+        "ms_por_previsao": 0.23,
+        "mb_do_pkl": 0.2,
+        "mae_kwh": 1.6333,
+        "mae_percentual": 8.61,
+        "rmse": 2.1538,
+        "r2": 0.9707
+      },
+      {
+        "algoritmo": "Random Forest",
+        "segundos_de_treino": 0.8,
+        "ms_por_previsao": 12.47,
+        "mb_do_pkl": 233.8,
+        "mae_kwh": 1.6526,
+        "mae_percentual": 8.71,
+        "rmse": 2.1878,
+        "r2": 0.9697
+      },
+      {
+        "algoritmo": "Ingenuo (repete o anterior)",
+        "segundos_de_treino": 0.0,
+        "ms_por_previsao": 0.0,
+        "mb_do_pkl": 0.0,
+        "mae_kwh": 1.7929,
+        "mae_percentual": 9.45,
+        "rmse": 2.4464,
+        "r2": 0.9622
+      },
+      {
+        "algoritmo": "Regressao Linear",
+        "segundos_de_treino": 0.0,
+        "ms_por_previsao": 0.18,
+        "mb_do_pkl": 0.0,
+        "mae_kwh": 1.7982,
+        "mae_percentual": 9.48,
+        "rmse": 2.3846,
+        "r2": 0.9641
+      },
+      {
+        "algoritmo": "Arvore de Decisao",
+        "segundos_de_treino": 0.1,
+        "ms_por_previsao": 0.2,
+        "mb_do_pkl": 3.7,
+        "mae_kwh": 2.2529,
+        "mae_percentual": 11.88,
+        "rmse": 3.0239,
+        "r2": 0.9422
+      }
+    ],
+    "utilidades": [
+      {
+        "algoritmo": "Gradient Boosting",
+        "segundos_de_treino": 1.2,
+        "ms_por_previsao": 0.22,
+        "mb_do_pkl": 0.2,
+        "mae_kwh": 0.4949,
+        "mae_percentual": 6.92,
+        "rmse": 0.6522,
+        "r2": 0.8751
+      },
+      {
+        "algoritmo": "Ingenuo (repete o anterior)",
+        "segundos_de_treino": 0.0,
+        "ms_por_previsao": 0.0,
+        "mb_do_pkl": 0.0,
+        "mae_kwh": 0.4992,
+        "mae_percentual": 6.98,
+        "rmse": 0.6428,
+        "r2": 0.8786
+      },
+      {
+        "algoritmo": "Regressao Linear",
+        "segundos_de_treino": 0.0,
+        "ms_por_previsao": 0.18,
+        "mb_do_pkl": 0.0,
+        "mae_kwh": 0.5001,
+        "mae_percentual": 6.99,
+        "rmse": 0.6519,
+        "r2": 0.8752
+      },
+      {
+        "algoritmo": "Random Forest",
+        "segundos_de_treino": 0.7,
+        "ms_por_previsao": 12.55,
+        "mb_do_pkl": 221.4,
+        "mae_kwh": 0.513,
+        "mae_percentual": 7.17,
+        "rmse": 0.6725,
+        "r2": 0.8672
+      },
+      {
+        "algoritmo": "Arvore de Decisao",
+        "segundos_de_treino": 0.1,
+        "ms_por_previsao": 0.19,
+        "mb_do_pkl": 3.5,
+        "mae_kwh": 0.7002,
+        "mae_percentual": 9.79,
+        "rmse": 0.9174,
+        "r2": 0.7528
+      }
+    ],
+    "manutencao": [
+      {
+        "algoritmo": "Random Forest",
+        "segundos_de_treino": 0.7,
+        "ms_por_previsao": 12.89,
+        "mb_do_pkl": 232.9,
+        "mae_kwh": 1.1071,
+        "mae_percentual": 3.67,
+        "rmse": 1.6619,
+        "r2": 0.9687
+      },
+      {
+        "algoritmo": "Gradient Boosting",
+        "segundos_de_treino": 1.4,
+        "ms_por_previsao": 0.26,
+        "mb_do_pkl": 0.2,
+        "mae_kwh": 1.2143,
+        "mae_percentual": 4.02,
+        "rmse": 1.7895,
+        "r2": 0.9637
+      },
+      {
+        "algoritmo": "Regressao Linear",
+        "segundos_de_treino": 0.0,
+        "ms_por_previsao": 0.18,
+        "mb_do_pkl": 0.0,
+        "mae_kwh": 1.2286,
+        "mae_percentual": 4.07,
+        "rmse": 1.9591,
+        "r2": 0.9565
+      },
+      {
+        "algoritmo": "Ingenuo (repete o anterior)",
+        "segundos_de_treino": 0.0,
+        "ms_por_previsao": 0.0,
+        "mb_do_pkl": 0.0,
+        "mae_kwh": 1.2954,
+        "mae_percentual": 4.29,
+        "rmse": 2.0139,
+        "r2": 0.954
+      },
+      {
+        "algoritmo": "Arvore de Decisao",
+        "segundos_de_treino": 0.1,
+        "ms_por_previsao": 0.19,
+        "mb_do_pkl": 3.7,
+        "mae_kwh": 1.4799,
+        "mae_percentual": 4.9,
+        "rmse": 2.1228,
+        "r2": 0.9489
+      }
+    ]
+  },
+  "graficos": [
+    "docs/graficos/setores_perfil_por_hora.png",
+    "docs/graficos/modelos_mae_percentual.png"
+  ]
+}

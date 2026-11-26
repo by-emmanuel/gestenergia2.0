@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block titulo %}GestEnergia — Painel{% endblock %}
+
+{% block conteudo %}
+  <h1>Painel</h1>
+
+  {# Filtros em UMA linha, acima de tudo o que eles escopam: grafico, tabela e alertas. #}
+  <form class="filtros" method="get" action="{{ url_for('painel.painel') }}">
+    <div class="filtro">
+      <label for="setor">Setor</label>
+      <select id="setor" name="setor" onchange="this.form.submit()">
+        <option value="">Todos os setores</option>
+        {% for setor in setores %}
+          <option value="{{ setor.id }}"
+                  {{ 'selected' if setor_escolhido and setor_escolhido.id == setor.id }}>
+            {{ setor.nome }}{{ ' (desativado)' if not setor.ativo }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filtro">
+      <label for="medidor">Medidor</label>
+      <select id="medidor" name="medidor" onchange="this.form.submit()"
+              {{ 'disabled' if not medidores }}>
+        {% for medidor in medidores %}
+          <option value="{{ medidor.id }}"
+                  {{ 'selected' if medidor_escolhido and medidor_escolhido.id == medidor.id }}>
+            {{ medidor.codigo }} — {{ medidor.setor.nome }}
+          </option>
+        {% endfor %}
+        {% if not medidores %}<option>nenhum medidor</option>{% endif %}
+      </select>
+    </div>
+
+    <div class="filtro">
+      <label for="janela">Período</label>
+      <select id="janela" name="janela" onchange="this.form.submit()">
+        {% for chave, rotulo, _ in janelas %}
+          <option value="{{ chave }}" {{ 'selected' if janela_escolhida == chave }}>
+            {{ rotulo }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <noscript><button class="botao" type="submit">Aplicar</button></noscript>
+  </form>
+
+  <p class="observacao">
+    O período conta <strong>leituras</strong>, não dias de calendário: as bases são de 2018 e 2014,
+    então uma janela contada de hoje viria vazia. A cadência é de 15 minutos — 96 leituras são um dia.
+  </p>
+
+  {# ------------------------------------------------------------------ #}
+  {# Consumo real x previsto                                            #}
+  {# ------------------------------------------------------------------ #}
+
+  <section class="cartao">
+    <h2>
+      Consumo real × previsto
+      {% if medidor_escolhido %}
+        <span class="subtitulo">
+          {{ medidor_escolhido.codigo }} · {{ medidor_escolhido.setor.nome }}
+        </span>
+      {% endif %}
+    </h2>
+
+    {% if not medidor_escolhido %}
+      <p>Nenhum medidor para mostrar.</p>
+      <p class="observacao">
+        Cadastre um <a href="{{ url_for('setores.lista') }}">setor</a> e um
+        <a href="{{ url_for('medidores.lista') }}">medidor</a> primeiro.
+      </p>
+    {% elif not serie.rotulos %}
+      <p>Este medidor ainda não tem leitura.</p>
+      <p class="observacao">
+        <a href="{{ url_for('leituras.nova') }}">Registre uma leitura</a> ou importe um CSV
+        (issue #19) para o gráfico ter o que mostrar.
+      </p>
+    {% else %}
+      {# Legenda sempre presente com 2 series: identidade nunca so por cor. #}
+      <div class="legenda">
+        <span class="legenda-item">
+          <span class="legenda-linha" style="--cor-serie: {{ cor_real }}"></span>
+          Consumo real
+        </span>
+        <span class="legenda-item">
+          <span class="legenda-linha legenda-linha-tracejada"
+                style="--cor-serie: {{ cor_previsto }}"></span>
+          Consumo previsto
+          {% if not serie.tem_previsto %}<em>(sem previsão ainda)</em>{% endif %}
+        </span>
+      </div>
+
+      <div class="grafico">
+        <canvas id="grafico-consumo"
+                role="img"
+                aria-label="Consumo real e previsto do medidor {{ medidor_escolhido.codigo }}.
+                            Os mesmos números estão na tabela abaixo."></canvas>
+      </div>
+
+      {% if not serie.tem_previsto %}
+        <p class="observacao">
+          Nenhuma leitura desta janela tem previsão: ela precisa de <strong>4 leituras
+          anteriores</strong> do mesmo medidor e de um modelo no setor. O cálculo entra na issue #26.
+        </p>
+      {% endif %}
+
+      {# O par acessivel do grafico: todo valor alcancavel sem passar o mouse. #}
+      <details class="tabela-do-grafico">
+        <summary>Ver os mesmos dados em tabela ({{ tabela|length }} leituras)</summary>
+        <div class="tabela-rolavel">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th>Data e hora</th>
+                <th class="numero">Real (kWh)</th>
+                <th class="numero">Previsto (kWh)</th>
+                <th class="numero">Fator</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for linha in tabela %}
+                <tr>
+                  <td>{{ linha.quando }}</td>
+                  <td class="numero">{{ ('%.3f' % linha.real)|replace('.', ',') }}</td>
+                  <td class="numero">
+                    {% if linha.previsto is none %}
+                      <span class="observacao">—</span>
+                    {% else %}
+                      {{ ('%.3f' % linha.previsto)|replace('.', ',') }}
+                    {% endif %}
+                  </td>
+                  <td class="numero">
+                    {% if linha.fator is none %}
+                      <span class="observacao">—</span>
+                    {% elif linha.fator_baixo %}
+                      <span class="fator-baixo">
+                        {{ ('%.3f' % linha.fator)|replace('.', ',') }}
+                      </span>
+                    {% else %}
+                      {{ ('%.3f' % linha.fator)|replace('.', ',') }}
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    {% endif %}
+  </section>
+
+  {# ------------------------------------------------------------------ #}
+  {# Alertas abertos                                                    #}
+  {# ------------------------------------------------------------------ #}
+
+  <section class="cartao">
+    <div class="cabecalho-pagina">
+      <h2>
+        Alertas abertos
+        {% if setor_escolhido %}<span class="subtitulo">{{ setor_escolhido.nome }}</span>{% endif %}
+      </h2>
+      <a href="{{ url_for('alertas.lista', status='ABERTO',
+                          setor=setor_escolhido.id if setor_escolhido else '') }}">
+        Ver todos e resolver
+      </a>
+    </div>
+
+    <div class="totais-de-alerta">
+      {% for total in totais_de_alerta %}
+        <div class="total-de-alerta">
+          <span class="marca-de-tipo" style="background: {{ total.cor }}"></span>
+          <span class="total-numero">{{ total.total }}</span>
+          <span class="total-rotulo">{{ total.rotulo }}</span>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if not alertas %}
+      <p>Nenhum alerta aberto.</p>
+      <p class="observacao">
+        Os alertas são abertos pelo registro e pela importação de leituras: consumo previsto acima
+        do limite do setor (regra 2) e fator de potência abaixo de 0,92 (regra 1).
+      </p>
+    {% else %}
+      <div class="tabela-rolavel">
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Quando</th>
+              <th>Medidor</th>
+              <th>Setor</th>
+              <th class="numero">Observado</th>
+              <th class="numero">Limite</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in alertas %}
+              <tr>
+                <td>
+                  {# Cor SEMPRE acompanhada do rotulo: cor sozinha nao identifica. #}
+                  <span class="marca-de-tipo" style="background: {{ item.cor }}"></span>
+                  {{ item.rotulo }}
+                </td>
+                <td>{{ item.alerta.leitura.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td><code>{{ item.medidor }}</code></td>
+                <td>{{ item.setor }}</td>
+                <td class="numero">
+                  {{ ('%.3f' % item.alerta.valor_observado)|replace('.', ',') }}
+                </td>
+                <td class="numero">
+                  {{ ('%.3f' % item.alerta.limite_referencia)|replace('.', ',') }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  {% if medidor_escolhido and serie.rotulos %}
+    {# Chart.js LOCAL. Nada de CDN: a maquina do laboratorio pode estar sem internet. #}
+    <script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
+    <script id="dados-do-grafico" type="application/json">{{ serie|tojson }}</script>
+    <script src="{{ url_for('static', filename='js/painel.js') }}"
+            data-cor-real="{{ cor_real }}" data-cor-previsto="{{ cor_previsto }}"></script>
+  {% endif %}
+{% endblock %}

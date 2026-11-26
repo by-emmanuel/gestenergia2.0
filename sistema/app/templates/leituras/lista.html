@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block titulo %}GestEnergia — Leituras{% endblock %}
+
+{% block conteudo %}
+  <div class="cabecalho-pagina">
+    <h1>Leituras</h1>
+    <div class="acoes-cabecalho">
+      <a class="botao" href="{{ url_for('leituras.nova') }}">Registrar leitura</a>
+      <a class="botao-secundario" href="{{ url_for('leituras.importar') }}">Importar CSV</a>
+    </div>
+  </div>
+
+  {% if not leituras %}
+    <section class="cartao">
+      <p>Nenhuma leitura registrada.</p>
+      <p class="observacao">
+        As leituras entram pelo <a href="{{ url_for('leituras.nova') }}">registro manual</a>, uma a
+        uma, ou pela <a href="{{ url_for('leituras.importar') }}">importação de CSV</a>, que é como
+        se carrega um trecho da base. Os dois caminhos geram previsão e alertas.
+      </p>
+    </section>
+  {% else %}
+    <p class="observacao">
+      {% if total > quantidade_na_lista %}
+        Mostrando as {{ quantidade_na_lista }} mais recentes de {{ total }} leituras.
+      {% else %}
+        {{ total }} leitura{{ 's' if total != 1 }} registrada{{ 's' if total != 1 }}.
+      {% endif %}
+    </p>
+
+    <div class="tabela-rolavel">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th>Data e hora</th>
+            <th>Medidor</th>
+            <th>Setor</th>
+            <th class="numero">Consumo (kWh)</th>
+            <th class="numero">Fator</th>
+            <th class="numero">Previsto (kWh)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for leitura in leituras %}
+            <tr>
+              <td>{{ leitura.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+              <td><code>{{ leitura.medidor.codigo }}</code></td>
+              <td>{{ leitura.medidor.setor.nome }}</td>
+              <td class="numero">
+                {{ ('%.3f' % leitura.consumo_kwh)|replace('.', ',') }}
+              </td>
+              <td class="numero">
+                {% if leitura.fator_potencia is none %}
+                  <span class="observacao" title="Este setor não mede fator de potência">—</span>
+                {% elif fator_baixo[leitura.id] %}
+                  <span class="fator-baixo"
+                        title="Abaixo de {{ ('%.2f' % fator_minimo)|replace('.', ',') }}, o mínimo da ANEEL">
+                    {{ ('%.3f' % leitura.fator_potencia)|replace('.', ',') }}
+                  </span>
+                {% else %}
+                  <span>{{ ('%.3f' % leitura.fator_potencia)|replace('.', ',') }}</span>
+                {% endif %}
+              </td>
+              <td class="numero">
+                {% if leitura.consumo_previsto_kwh is none %}
+                  <span class="observacao">sem previsão ainda</span>
+                {% else %}
+                  {{ ('%.3f' % leitura.consumo_previsto_kwh)|replace('.', ',') }}
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <section class="cartao">
+      <h2>Como ler esta tela</h2>
+      <ul>
+        <li>
+          <strong>Fator “—”</strong> significa que o setor não mede fator de potência. Isso não é erro:
+          hoje só a Produção tem esse dado, e leitura sem ele não gera alerta.
+        </li>
+        <li>
+          <strong>“Sem previsão ainda”</strong> aparece quando o medidor tem menos de 4 leituras
+          anteriores, ou quando o setor não tem modelo. É o comportamento previsto, não falha.
+        </li>
+      </ul>
+    </section>
+  {% endif %}
+{% endblock %}

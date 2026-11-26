@@ -1,0 +1,19 @@
+.DS_Store
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+
+# saidas da compilacao do LaTeX
+*.aux
+*.log
+*.out
+compilacao.log
+
+# a base original da ElectricityLoadDiagrams tem 678 MB e NAO vai para o git
+# (o limite do GitHub e 100 MB). Baixe de archive.ics.uci.edu/dataset/321
+LD2011_2014.txt
+LD2011_2014.txt.zip
+
+# saida do notebook quando rodado da raiz
+modelos_finais_notebook.json

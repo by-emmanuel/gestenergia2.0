@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block titulo %}GestEnergia — Minha conta{% endblock %}
+
+{% block conteudo %}
+  <h1>Minha conta</h1>
+
+  <section class="cartao">
+    <h2>{{ usuario.nome }}</h2>
+    <dl class="lista-dados">
+      <dt>E-mail</dt>
+      <dd>{{ usuario.email }}</dd>
+      <dt>Perfil</dt>
+      <dd>{{ usuario.perfil.value }}</dd>
+    </dl>
+  </section>
+
+  <section class="cartao">
+    <h2>O que este perfil pode fazer</h2>
+    {% if usuario.e_gestor %}
+      <p>Como <strong>GESTOR</strong>, você faz tudo no sistema:</p>
+      <ul>
+        <li>Registrar e importar leituras</li>
+        <li>Cadastrar setores e medidores</li>
+        <li>Configurar o limite de consumo de cada setor</li>
+        <li>Resolver alertas</li>
+      </ul>
+    {% else %}
+      <p>Como <strong>OPERADOR</strong>, você pode:</p>
+      <ul>
+        <li>Registrar leituras</li>
+        <li>Importar leituras por arquivo CSV</li>
+      </ul>
+      <p class="observacao">
+        Configurar limites e resolver alertas são ações do perfil GESTOR.
+      </p>
+    {% endif %}
+  </section>
+{% endblock %}

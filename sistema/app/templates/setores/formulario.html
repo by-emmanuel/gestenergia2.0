@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% set editando = setor is not none %}
+
+{% block titulo %}
+  GestEnergia — {{ 'Editar setor' if editando else 'Novo setor' }}
+{% endblock %}
+
+{% block conteudo %}
+  <h1>{{ 'Editar setor' if editando else 'Novo setor' }}</h1>
+
+  <section class="cartao cartao-estreito">
+    <form class="formulario" method="post">
+      <div class="campo">
+        <label for="nome">Nome <span class="obrigatorio">*</span></label>
+        <input id="nome" name="nome" type="text" maxlength="120"
+               value="{{ dados.get('nome', '') }}" required autofocus>
+      </div>
+
+      <div class="campo">
+        <label for="descricao">Descrição</label>
+        <input id="descricao" name="descricao" type="text" maxlength="255"
+               value="{{ dados.get('descricao', '') }}">
+      </div>
+
+      <div class="campo">
+        <label for="limite_consumo_kwh">Limite de consumo (kWh)</label>
+        <input id="limite_consumo_kwh" name="limite_consumo_kwh" type="text"
+               inputmode="decimal" placeholder="ex.: 122,71"
+               value="{{ dados.get('limite_consumo_kwh', '') }}">
+        <p class="ajuda">
+          Deixe <strong>vazio</strong> para o setor não gerar alerta de consumo. O valor é o
+          <strong>percentil 99</strong> do consumo deste setor no período de treino (issue #44).
+          Se preenchido, precisa ser maior que zero.
+        </p>
+      </div>
+
+      <div class="campo">
+        <label for="arquivo_modelo">Arquivo do modelo</label>
+        <input id="arquivo_modelo" name="arquivo_modelo" type="text" maxlength="120"
+               placeholder="ex.: modelo_consumo_producao.pkl"
+               value="{{ dados.get('arquivo_modelo', '') }}">
+        <p class="ajuda">
+          Nome do arquivo dentro de <code>ml/</code>. Vazio, ou arquivo ausente, faz a tela mostrar
+          “sem previsão ainda” — sem erro.
+        </p>
+      </div>
+
+      <div class="campo campo-marcacao">
+        <label>
+          <input name="tem_fator_potencia" type="checkbox"
+                 {{ 'checked' if dados.get('tem_fator_potencia') }}>
+          Este setor mede fator de potência
+        </label>
+        <p class="ajuda">
+          Só os setores com esse dado geram alerta de fator abaixo de 0,92. Leitura sem o dado não
+          gera alerta e não dá erro.
+        </p>
+      </div>
+
+      <div class="acoes-formulario">
+        <button class="botao" type="submit">{{ 'Salvar' if editando else 'Cadastrar' }}</button>
+        <a href="{{ url_for('setores.lista') }}">Cancelar</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

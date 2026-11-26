@@ -1,0 +1,128 @@
+{
+  "algoritmo": "Gradient Boosting",
+  "versao_scikit_learn": "1.5.2",
+  "semente": 42,
+  "atributos": [
+    "hora",
+    "minuto",
+    "dia_semana",
+    "mes",
+    "fim_de_semana",
+    "lag_1",
+    "lag_2",
+    "lag_3",
+    "lag_4"
+  ],
+  "alvo": "Usage_kWh",
+  "treinado_em": "periodo de treino (10 primeiros meses), nunca no periodo de teste",
+  "setores": {
+    "producao": {
+      "algoritmo": "Gradient Boosting",
+      "arquivo_modelo": "modelo_consumo_producao.pkl",
+      "mae_kwh": 5.0315,
+      "mae_percentual": 20.23,
+      "rmse": 9.5194,
+      "r2": 0.9065,
+      "arquivo": "modelo_consumo_producao.pkl",
+      "mb": 0.188,
+      "ms_por_previsao": 0.22,
+      "confere_ao_recarregar": true,
+      "media_no_teste_kwh": 24.873,
+      "periodos_de_treino": 29180,
+      "periodos_de_teste": 5856,
+      "importancia_dos_atributos": {
+        "hora": 0.0257,
+        "minuto": 0.0039,
+        "dia_semana": 0.0005,
+        "mes": 0.0028,
+        "fim_de_semana": 0.0003,
+        "lag_1": 0.943,
+        "lag_2": 0.0125,
+        "lag_3": 0.0084,
+        "lag_4": 0.0029
+      }
+    },
+    "administrativo": {
+      "algoritmo": "Gradient Boosting",
+      "arquivo_modelo": "modelo_consumo_administrativo.pkl",
+      "mae_kwh": 1.6333,
+      "mae_percentual": 8.61,
+      "rmse": 2.1538,
+      "r2": 0.9707,
+      "arquivo": "modelo_consumo_administrativo.pkl",
+      "mb": 0.188,
+      "ms_por_previsao": 0.22,
+      "confere_ao_recarregar": true,
+      "media_no_teste_kwh": 18.971,
+      "periodos_de_treino": 29180,
+      "periodos_de_teste": 5856,
+      "importancia_dos_atributos": {
+        "hora": 0.0113,
+        "minuto": 0.0009,
+        "dia_semana": 0.0007,
+        "mes": 0.0005,
+        "fim_de_semana": 0.0004,
+        "lag_1": 0.9835,
+        "lag_2": 0.0003,
+        "lag_3": 0.0008,
+        "lag_4": 0.0015
+      }
+    },
+    "utilidades": {
+      "algoritmo": "Gradient Boosting",
+      "arquivo_modelo": "modelo_consumo_utilidades.pkl",
+      "mae_kwh": 0.4949,
+      "mae_percentual": 6.92,
+      "rmse": 0.6522,
+      "r2": 0.8751,
+      "arquivo": "modelo_consumo_utilidades.pkl",
+      "mb": 0.19,
+      "ms_por_previsao": 0.22,
+      "confere_ao_recarregar": true,
+      "media_no_teste_kwh": 7.153,
+      "periodos_de_treino": 29180,
+      "periodos_de_teste": 5856,
+      "importancia_dos_atributos": {
+        "hora": 0.0196,
+        "minuto": 0.0003,
+        "dia_semana": 0.0004,
+        "mes": 0.0066,
+        "fim_de_semana": 0.0,
+        "lag_1": 0.9626,
+        "lag_2": 0.0039,
+        "lag_3": 0.0041,
+        "lag_4": 0.0023
+      }
+    },
+    "manutencao": {
+      "algoritmo": "Gradient Boosting",
+      "arquivo_modelo": "modelo_consumo_manutencao.pkl",
+      "mae_kwh": 1.2143,
+      "mae_percentual": 4.02,
+      "rmse": 1.7895,
+      "r2": 0.9637,
+      "arquivo": "modelo_consumo_manutencao.pkl",
+      "mb": 0.188,
+      "ms_por_previsao": 0.22,
+      "confere_ao_recarregar": true,
+      "media_no_teste_kwh": 30.173,
+      "periodos_de_treino": 29180,
+      "periodos_de_teste": 5856,
+      "importancia_dos_atributos": {
+        "hora": 0.0112,
+        "minuto": 0.0041,
+        "dia_semana": 0.0,
+        "mes": 0.0027,
+        "fim_de_semana": 0.0,
+        "lag_1": 0.9655,
+        "lag_2": 0.0106,
+        "lag_3": 0.0003,
+        "lag_4": 0.0056
+      }
+    }
+  },
+  "graficos": [
+    "docs/graficos/modelos_real_x_previsto.png",
+    "docs/graficos/modelos_importancia_dos_atributos.png"
+  ]
+}

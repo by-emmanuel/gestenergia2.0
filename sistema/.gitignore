@@ -1,0 +1,131 @@
+# =============================================================
+# GestEnergia — .gitignore (issue #2)
+# Regra geral: credenciais, ambiente local e arquivos gerados
+# NAO entram no repositorio. O que o professor precisa para
+# rodar o projeto (banco.sql, requirements.txt, o .pkl e a base
+# usada) ENTRA.
+# =============================================================
+
+# --- Credenciais e ambiente (nunca commitar) -----------------
+.env
+.env.*
+!.env.example
+
+# --- Ambientes virtuais --------------------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# --- Python --------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+
+# --- Testes e cobertura --------------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# --- Jupyter / notebooks -------------------------------------
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# --- Flask ---------------------------------------------------
+instance/
+*.log
+
+# --- Banco de dados local ------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+dump.sql
+backup*.sql
+
+# --- Dados ---------------------------------------------------
+# A base da siderurgica (uns 3 MB) e os CSVs de cada setor ficam versionados:
+# o professor precisa deles para rodar o projeto.
+# A ElectricityLoadDiagrams tem 678 MB e o limite do GitHub e 100 MB por
+# arquivo -- ela NUNCA entra. O link de download fica no README.
+data/bruto/*
+!data/bruto/.gitkeep
+!data/bruto/Steel_industry_data.csv
+LD2011_2014.txt
+LD2011_2014.txt.zip
+*.txt.zip
+# O download novo da UCI (static/public/321) vem com OUTRO nome, que as regras
+# acima nao pegavam -- em 10/10/2026 o arquivo de 249 MB apareceu solto na raiz
+# do repositorio, visivel ao git. Estas tres linhas fecham o buraco em qualquer
+# pasta, inclusive na raiz:
+electricityloaddiagrams*.zip
+electricityloaddiagrams*/
+steel+industry+energy+consumption.zip
+data/processado/*
+!data/processado/.gitkeep
+!data/processado/leituras_preprocessado.csv
+# O perfil dos 370 clientes (issue #43) tem uns 10 KB e e a evidencia da
+# metodologia e a entrada da #44: versionado de proposito, para nao ser preciso
+# reler os 678 MB para saber quais clientes sao completos.
+!data/processado/perfil_clientes_2014.csv
+!data/processado/perfil_clientes_2014.json
+# A escolha dos 3 clientes e os 4 limites (issue #44). Uns 3 KB, e e o registro
+# de como os limites de setores.limite_consumo_kwh foram calculados.
+!data/processado/setores_kmeans.json
+# O pre-processamento (#13) e a comparacao dos 5 algoritmos nos 4 setores (#21).
+# Pequenos, e sao a evidencia de como os modelos da #25 foram escolhidos.
+!data/processado/preprocessamento.json
+!data/processado/metricas_modelos.json
+# As metricas dos 4 .pkl que estao em ml/ (issue #25).
+!data/processado/modelos_finais.json
+
+# Um CSV por setor (date, Usage_kWh), gerados pela issue #44
+data/setores/*
+!data/setores/.gitkeep
+!data/setores/producao.csv
+!data/setores/administrativo.csv
+!data/setores/utilidades.csv
+!data/setores/manutencao.csv
+
+# --- Modelo --------------------------------------------------
+# Os 4 arquivos ml/modelo_consumo_<setor>.pkl SAO versionados (prazo de 01/11).
+# Testes e modelos descartados ficam de fora.
+ml/experimentos/
+ml/*.joblib
+ml/modelo_*_teste.pkl
+
+# --- Editor / IDE --------------------------------------------
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# --- Sistema operacional -------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# --- Claude Code ---------------------------------------------
+# As skills e o settings.json do projeto sao versionados;
+# as permissoes locais de cada pessoa, nao.
+.claude/settings.local.json
+
+# --- Anotacoes locais ----------------------------------------
+# docs-local/ e pessoal: relatorios, PDFs e rascunhos que nao
+# fazem parte da entrega. Nunca versionado.
+docs-local/

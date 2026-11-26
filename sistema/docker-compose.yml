@@ -1,0 +1,61 @@
+# GestEnergia — ambiente de desenvolvimento e testes
+#
+# Antes de subir:  cp .env.example .env  (e preencher)
+#
+#   docker compose up -d db      # so o banco
+#   docker compose up app        # banco + sistema em http://localhost:5000
+#   docker compose exec app pytest
+#   docker compose down          # para tudo (os dados do MySQL ficam no volume)
+#   docker compose down -v       # apaga tambem o banco, para recriar do zero
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: gestenergia-db
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_USER: ${MYSQL_USER:-gestenergia}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gestenergia}
+    ports:
+      # 3307 no host para nao brigar com um MySQL ja instalado na maquina
+      - "3307:3306"
+    volumes:
+      - dados_mysql:/var/lib/mysql
+      # Scripts rodados UMA VEZ, na primeira criacao do volume, em ordem alfabetica.
+      # Cada arquivo e montado individualmente: montar o diretorio e, dentro dele,
+      # o banco.sql nao funciona (bind mount aninhado e recusado pelo Docker Desktop).
+      # Script novo em docker/mysql/init/ precisa de uma linha nova aqui.
+      - ./docker/mysql/init/00-criar-bancos.sql:/docker-entrypoint-initdb.d/00-criar-bancos.sql:ro
+      - ./banco.sql:/docker-entrypoint-initdb.d/10-banco.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  app:
+    build: .
+    container_name: gestenergia-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # dentro da rede do compose o banco se chama "db", nao "localhost"
+      MYSQL_HOST: db
+      MYSQL_PORT: "3306"
+    ports:
+      # Porta do host configuravel pelo .env. O padrao e 5000; no macOS o
+      # AirPlay Receiver (ControlCenter) costuma ocupar a 5000 — nesse caso
+      # ponha PORTA_APP=5001 no .env. Dentro do container e sempre 5000.
+      - "${PORTA_APP:-5000}:5000"
+    volumes:
+      # codigo montado: editar na maquina reflete no container sem rebuild
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  dados_mysql:

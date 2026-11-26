@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block titulo %}GestEnergia — Importar leituras{% endblock %}
+
+{% block conteudo %}
+  <div class="cabecalho-pagina">
+    <h1>Importar leituras</h1>
+    <a href="{{ url_for('leituras.lista') }}">Ver últimas leituras</a>
+  </div>
+
+  {# Resumo da importacao. Vem antes do formulario para ser a primeira coisa
+     que se le depois de enviar o arquivo.
+
+     A condicao inclui `ignoradas` de proposito: quando NADA e importado — o
+     caso de reenviar um arquivo ja importado — e justamente quando a pessoa
+     mais precisa da explicacao. Mostrar so o resumo do sucesso deixaria a tela
+     muda no unico caso em que ela tem algo a dizer. #}
+  {% if resultado and (resultado.importadas or resultado.ignoradas) %}
+    <section class="cartao resumo-importacao {{ 'resumo-sem-nada' if not resultado.importadas }}">
+      {% if resultado.importadas %}
+        <h2>{{ '{:,}'.format(resultado.importadas).replace(',', '.') }}
+          leitura{{ '' if resultado.importadas == 1 else 's' }} importada{{ '' if resultado.importadas == 1 else 's' }}</h2>
+      {% else %}
+        <h2>Nenhuma leitura importada</h2>
+        <p>
+          Todas as {{ '{:,}'.format(resultado.ignoradas).replace(',', '.') }} linhas do arquivo
+          foram puladas. O motivo está abaixo.
+        </p>
+      {% endif %}
+
+      <dl class="resumo-numeros">
+        <div>
+          <dt>Formato reconhecido</dt>
+          <dd>{{ 'siderúrgica (11 colunas)' if resultado.formato == 'siderurgica'
+                 else 'setor (date, Usage_kWh)' }}</dd>
+        </div>
+        {% if resultado.primeira %}
+          <div>
+            <dt>Período</dt>
+            <dd>{{ resultado.primeira.strftime('%d/%m/%Y %H:%M') }}
+              até {{ resultado.ultima.strftime('%d/%m/%Y %H:%M') }}</dd>
+          </div>
+        {% endif %}
+        {% if resultado.importadas %}
+          <div>
+            <dt>Com previsão</dt>
+            <dd>{{ '{:,}'.format(resultado.com_previsao).replace(',', '.') }}</dd>
+          </div>
+          <div>
+            <dt>Alertas abertos</dt>
+            <dd>{{ '{:,}'.format(resultado.alertas).replace(',', '.') }}</dd>
+          </div>
+        {% endif %}
+        <div>
+          <dt>Ignoradas</dt>
+          <dd>{{ '{:,}'.format(resultado.ignoradas).replace(',', '.') }}</dd>
+        </div>
+      </dl>
+
+      {% if resultado.com_previsao < resultado.importadas %}
+        <p class="observacao">
+          As {{ resultado.importadas - resultado.com_previsao }} primeiras leituras ficaram
+          <strong>sem previsão</strong>: a previsão precisa de 4 leituras anteriores do mesmo
+          medidor. É o esperado quando o medidor começa vazio.
+        </p>
+      {% endif %}
+
+      {# Aberto quando nada entrou: ai o motivo e a unica informacao util da tela. #}
+      {% if resultado.motivos %}
+        <details {{ 'open' if not resultado.importadas }}>
+          <summary>Por que {{ resultado.ignoradas }} linha{{ '' if resultado.ignoradas == 1 else 's' }}
+            {{ 'foi ignorada' if resultado.ignoradas == 1 else 'foram ignoradas' }}</summary>
+          <ul class="lista-motivos">
+            {% for motivo, quantas in resultado.motivos.items() %}
+              <li><strong>{{ quantas }}</strong> — {{ motivo }}</li>
+            {% endfor %}
+          </ul>
+        </details>
+      {% endif %}
+
+      {% if resultado.importadas %}
+        <p>
+          <a class="botao" href="{{ url_for('painel.painel') }}">Ver no painel</a>
+        </p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% if not medidores %}
+    <section class="cartao cartao-estreito">
+      <p>Não há medidor ativo para receber leitura.</p>
+      <p class="observacao">
+        Toda leitura pertence a um medidor ativo. Veja os
+        <a href="{{ url_for('medidores.lista') }}">medidores</a>
+        {%- if current_user.e_gestor %} e cadastre ou reative um{% endif %}.
+      </p>
+    </section>
+  {% else %}
+    <section class="cartao cartao-estreito">
+      <form class="formulario" method="post" enctype="multipart/form-data">
+        <div class="campo">
+          <label for="id_medidor">Medidor <span class="obrigatorio">*</span></label>
+          <select id="id_medidor" name="id_medidor" required>
+            <option value="">— escolha o medidor —</option>
+            {% for medidor in medidores %}
+              <option value="{{ medidor.id }}"
+                      {{ 'selected' if dados.get('id_medidor') == medidor.id|string }}>
+                {{ medidor.codigo }} — {{ medidor.setor.nome }}
+              </option>
+            {% endfor %}
+          </select>
+          <p class="ajuda">
+            Cada arquivo é a série de <strong>um</strong> medidor. Importe o CSV do setor
+            correspondente.
+          </p>
+        </div>
+
+        <div class="campo">
+          <label for="arquivo">Arquivo CSV <span class="obrigatorio">*</span></label>
+          <input id="arquivo" name="arquivo" type="file" accept=".csv,text/csv" required>
+          <p class="ajuda">
+            O formato é reconhecido pelo cabeçalho, sem você escolher:
+          </p>
+          <ul class="ajuda lista-formatos">
+            <li>
+              <strong>Base da siderúrgica</strong> — <code>Steel_industry_data.csv</code>, com as 11
+              colunas. O fator de potência vem em percentual e é convertido para 0–1.
+            </li>
+            <li>
+              <strong>Arquivos de setor</strong> — <code>data/setores/*.csv</code>, com
+              <code>date</code> e <code>Usage_kWh</code>. Ficam sem fator de potência.
+            </li>
+          </ul>
+          <p class="ajuda">
+            Linhas repetidas ou inválidas são puladas e contadas no resumo. Cada leitura importada
+            recebe previsão e pode abrir alerta, igual ao registro manual.
+          </p>
+        </div>
+
+        <div class="acoes">
+          <button class="botao" type="submit">Importar</button>
+          <a class="botao-secundario" href="{{ url_for('leituras.nova') }}">Registrar uma leitura</a>
+        </div>
+      </form>
+    </section>
+  {% endif %}
+{% endblock %}

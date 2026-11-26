@@ -1,0 +1,32 @@
+# GestEnergia — dependencias com versoes fixas (issue #3)
+#
+# ATENCAO: a versao do scikit-learn abaixo precisa ser EXATAMENTE a mesma
+# usada no Colab para treinar e salvar os 4 modelos de ml/ (um por setor).
+# No inicio do notebook, rode:  !pip install -q scikit-learn==1.5.2
+# Se mudar aqui, gere o .pkl de novo.
+
+# Web
+Flask==3.1.0
+Flask-Login==0.6.3
+Jinja2==3.1.4
+Werkzeug==3.1.3
+python-dotenv==1.0.1
+
+# Banco
+SQLAlchemy==2.0.36
+PyMySQL==1.1.1
+cryptography==43.0.3
+
+# Dados e modelo
+pandas==2.2.3
+numpy==2.1.3
+scikit-learn==1.5.2
+joblib==1.4.2
+# Só para os graficos de conferencia das analises de notebooks/ (issues #43,
+# #44 e #21). A aplicacao Flask nao importa matplotlib em lugar nenhum: as
+# telas usam o Chart.js local de app/static/vendor/.
+matplotlib==3.9.2
+
+# Testes
+pytest==8.3.4
+pytest-flask==1.3.0

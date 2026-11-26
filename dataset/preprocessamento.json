@@ -1,0 +1,54 @@
+{
+  "atributos": [
+    "hora",
+    "minuto",
+    "dia_semana",
+    "mes",
+    "fim_de_semana",
+    "lag_1",
+    "lag_2",
+    "lag_3",
+    "lag_4"
+  ],
+  "alvo": "Usage_kWh",
+  "lags": 4,
+  "meses_de_treino": 10,
+  "setores": {
+    "producao": {
+      "linhas": 35036,
+      "treino": 29180,
+      "teste": 5856,
+      "primeira": "2018-01-01 01:00:00",
+      "ultima": "2018-12-31 23:45:00",
+      "corte": "2018-11-01 00:00:00",
+      "media_no_teste_kwh": 24.873
+    },
+    "administrativo": {
+      "linhas": 35036,
+      "treino": 29180,
+      "teste": 5856,
+      "primeira": "2014-01-01 01:00:00",
+      "ultima": "2014-12-31 23:45:00",
+      "corte": "2014-11-01 00:00:00",
+      "media_no_teste_kwh": 18.971
+    },
+    "utilidades": {
+      "linhas": 35036,
+      "treino": 29180,
+      "teste": 5856,
+      "primeira": "2014-01-01 01:00:00",
+      "ultima": "2014-12-31 23:45:00",
+      "corte": "2014-11-01 00:00:00",
+      "media_no_teste_kwh": 7.153
+    },
+    "manutencao": {
+      "linhas": 35036,
+      "treino": 29180,
+      "teste": 5856,
+      "primeira": "2014-01-01 01:00:00",
+      "ultima": "2014-12-31 23:45:00",
+      "corte": "2014-11-01 00:00:00",
+      "media_no_teste_kwh": 30.173
+    }
+  }
+}

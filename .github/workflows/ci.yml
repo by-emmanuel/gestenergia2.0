@@ -1,0 +1,126 @@
+# CI do GestEnergia — o sistema (Flask + MySQL) vive em sistema/.
+#
+# Roda a cada push e a cada pull request na main. O que ele faz e exatamente o
+# que o desenvolvedor faz na maquina, na mesma ordem:
+#
+#   sobe o MySQL  ->  cria os 2 bancos  ->  aplica o banco.sql  ->  pytest
+#
+# O banco.sql ser APLICADO aqui nao e detalhe: o teste
+# test_models_espelham_o_banco_sql compara o schema dos models com o schema real
+# que o banco.sql cria, e ele se PULA sozinho quando o banco de producao nao tem
+# as 5 tabelas. Sem este passo o CI ficaria verde sem conferir justamente o
+# arquivo que vai para o professor em 23/11.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  testes:
+    name: pytest com MySQL 8
+    runs-on: ubuntu-latest
+
+    # Neste repositorio o sistema vive em sistema/ (artigo/, notebook/ e
+    # dataset/ sao da disciplina de Analise de Dados). Todo passo de shell
+    # abaixo roda dentro dessa pasta; os "uses" continuam na raiz.
+    defaults:
+      run:
+        working-directory: sistema
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          # Mesmos nomes e senhas do .env.example, para o config.py achar o
+          # banco pelos proprios valores padrao, sem segredo nenhum: este MySQL
+          # vive uns minutos dentro do runner e some.
+          MYSQL_DATABASE: gestenergia
+          MYSQL_USER: gestenergia
+          MYSQL_PASSWORD: gestenergia
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: "3306"
+      MYSQL_USER: gestenergia
+      MYSQL_PASSWORD: gestenergia
+      MYSQL_DATABASE: gestenergia
+      MYSQL_DATABASE_TEST: gestenergia_test
+      SECRET_KEY: chave-de-ci-sem-valor-real
+      CAMINHO_MODELO: ml
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar o Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: sistema/requirements.txt
+
+      - name: Esperar o MySQL aceitar conexao
+        # O healthcheck do servico ja espera, mas ele responde antes de o
+        # usuario da aplicacao estar pronto. Este laco fecha essa janela.
+        run: |
+          for tentativa in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -proot --silent; then
+              echo "MySQL respondeu na tentativa $tentativa"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "MySQL nao respondeu em 60 segundos"
+          exit 1
+
+      - name: Criar o banco de teste e dar as permissoes
+        # Mesmo conteudo de docker/mysql/init/00-criar-bancos.sql. O compose roda
+        # aquele arquivo sozinho; aqui o passo e explicito porque o servico do
+        # GitHub Actions nao tem docker-entrypoint-initdb.d.
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -uroot -proot <<'SQL'
+          CREATE DATABASE IF NOT EXISTS gestenergia_test
+            CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+          GRANT ALL PRIVILEGES ON gestenergia.*      TO 'gestenergia'@'%';
+          GRANT ALL PRIVILEGES ON gestenergia_test.* TO 'gestenergia'@'%';
+          FLUSH PRIVILEGES;
+          SQL
+
+      - name: Aplicar o banco.sql
+        run: mysql -h 127.0.0.1 -P 3306 -uroot -proot < banco.sql
+
+      - name: Conferir que as 5 tabelas existem
+        # Se este passo falhar, o teste de espelhamento se pularia em silencio e
+        # o CI ficaria verde sem conferir o banco.sql.
+        run: |
+          tabelas=$(mysql -h 127.0.0.1 -P 3306 -uroot -proot -N -B \
+            -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='gestenergia'")
+          echo "tabelas em gestenergia: $tabelas"
+          test "$tabelas" -eq 5
+
+      - name: Instalar as dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Conferir que os 4 modelos estao no repositorio
+        # Regra 9. Os .pkl sao versionados (0,75 MB no total) e os testes de
+        # sistema de previsao se PULAM quando eles faltam. Falhar aqui e melhor
+        # que descobrir na maquina do laboratorio que ml/ ficou para tras.
+        run: |
+          ls -la ml/
+          test "$(ls ml/*.pkl | wc -l)" -eq 4
+
+      - name: Rodar a suite
+        run: pytest

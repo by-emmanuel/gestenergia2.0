@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block titulo %}GestEnergia — Registrar leitura{% endblock %}
+
+{% block conteudo %}
+  <div class="cabecalho-pagina">
+    <h1>Registrar leitura</h1>
+    <a href="{{ url_for('leituras.lista') }}">Ver últimas leituras</a>
+  </div>
+
+  {% if not medidores %}
+    <section class="cartao cartao-estreito">
+      <p>Não há medidor ativo para receber leitura.</p>
+      <p class="observacao">
+        Toda leitura pertence a um medidor ativo. Veja os
+        <a href="{{ url_for('medidores.lista') }}">medidores</a>
+        {%- if current_user.e_gestor %} e cadastre ou reative um{% endif %}.
+      </p>
+    </section>
+  {% else %}
+    <section class="cartao cartao-estreito">
+      <form class="formulario" method="post">
+        <div class="campo">
+          <label for="id_medidor">Medidor <span class="obrigatorio">*</span></label>
+          <select id="id_medidor" name="id_medidor" required>
+            <option value="">— escolha o medidor —</option>
+            {% for medidor in medidores %}
+              <option value="{{ medidor.id }}"
+                      {{ 'selected' if dados.get('id_medidor') == medidor.id|string }}>
+                {{ medidor.codigo }} — {{ medidor.setor.nome }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="data_hora">Data e hora <span class="obrigatorio">*</span></label>
+          <input id="data_hora" name="data_hora" type="datetime-local"
+                 value="{{ dados.get('data_hora', '') }}" required>
+          <p class="ajuda">
+            As duas bases medem a cada 15 minutos. Cada medidor aceita
+            <strong>uma única</strong> leitura por data e hora.
+          </p>
+        </div>
+
+        <div class="campo">
+          <label for="consumo_kwh">Consumo (kWh) <span class="obrigatorio">*</span></label>
+          <input id="consumo_kwh" name="consumo_kwh" type="text" inputmode="decimal"
+                 placeholder="ex.: 3,17" value="{{ dados.get('consumo_kwh', '') }}" required>
+        </div>
+
+        <div class="campo">
+          <label for="fator_potencia">Fator de potência</label>
+          <input id="fator_potencia" name="fator_potencia" type="text" inputmode="decimal"
+                 placeholder="ex.: 0,95" value="{{ dados.get('fator_potencia', '') }}">
+          <p class="ajuda">
+            De <strong>0 a 1</strong>, não em percentual. Deixe vazio se o medidor não tem esse dado —
+            hoje só o setor Produção tem. Abaixo de <strong>0,92</strong> gera alerta.
+          </p>
+        </div>
+
+        <div class="acoes-formulario">
+          <button class="botao" type="submit">Registrar</button>
+          <a href="{{ url_for('leituras.lista') }}">Cancelar</a>
+        </div>
+      </form>
+    </section>
+
+    <section class="cartao">
+      <h2>Sobre a previsão</h2>
+      <p>
+        A previsão do consumo dos próximos 15 minutos precisa de <strong>4 leituras anteriores</strong>
+        do mesmo medidor. Com menos que isso, a leitura é gravada e a tela mostra
+        <strong>“sem previsão ainda”</strong> — sem erro.
+      </p>
+      <p class="observacao">
+        O cálculo da previsão entra na issue #26 e os alertas na #27. Até lá toda leitura é gravada
+        sem previsão.
+      </p>
+    </section>
+  {% endif %}
+{% endblock %}

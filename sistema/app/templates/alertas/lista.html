@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block titulo %}GestEnergia — Alertas{% endblock %}
+
+{% macro rotulo_do_tipo(tipo) -%}
+  {{ 'Consumo acima do limite' if tipo.value == 'CONSUMO_ACIMA_LIMITE' else 'Fator de potência baixo' }}
+{%- endmacro %}
+
+{% macro numero(valor) -%}
+  {{ ('%.3f' % valor)|replace('.', ',') }}
+{%- endmacro %}
+
+{% block conteudo %}
+  <div class="cabecalho-pagina">
+    <h1>Alertas</h1>
+  </div>
+
+  {# Os totais por tipo e status. Sao a justificativa visivel do filtro: o
+     gestor ve de cara que ha centenas de um tipo e poucos de outro. #}
+  <div class="cartoes-numeros">
+    {% for tipo in tipos %}
+      {% set abertos = totais.get((tipo, status_possiveis[0]), 0) %}
+      {% set resolvidos = totais.get((tipo, status_possiveis[1]), 0) %}
+      <div class="cartao-numero">
+        <p class="cartao-numero-rotulo">{{ rotulo_do_tipo(tipo) }}</p>
+        <p class="cartao-numero-valor">{{ abertos }}</p>
+        <p class="cartao-numero-pe">
+          aberto{{ '' if abertos == 1 else 's' }}
+          {%- if resolvidos %} · {{ resolvidos }} resolvido{{ '' if resolvidos == 1 else 's' }}{% endif %}
+        </p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <section class="cartao">
+    <form class="filtros" method="get">
+      <div class="filtro">
+        <label for="tipo">Tipo</label>
+        <select id="tipo" name="tipo">
+          <option value="">Todos</option>
+          {% for tipo in tipos %}
+            <option value="{{ tipo.value }}" {{ 'selected' if filtros.tipo == tipo.value }}>
+              {{ rotulo_do_tipo(tipo) }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filtro">
+        <label for="status">Situação</label>
+        <select id="status" name="status">
+          <option value="">Todas</option>
+          {% for situacao in status_possiveis %}
+            <option value="{{ situacao.value }}" {{ 'selected' if filtros.status == situacao.value }}>
+              {{ 'Aberto' if situacao.value == 'ABERTO' else 'Resolvido' }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filtro">
+        <label for="setor">Setor</label>
+        <select id="setor" name="setor">
+          <option value="">Todos</option>
+          {% for setor in setores %}
+            <option value="{{ setor.id }}" {{ 'selected' if filtros.setor == setor.id|string }}>
+              {{ setor.nome }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="acoes">
+        <button class="botao" type="submit">Filtrar</button>
+        <a class="botao-secundario" href="{{ url_for('alertas.lista') }}">Limpar</a>
+      </div>
+    </form>
+  </section>
+
+  {% if not alertas %}
+    <section class="cartao">
+      <p>Nenhum alerta com esses filtros.</p>
+      <p class="observacao">
+        Os alertas são abertos pelo registro e pela importação de leituras: consumo previsto acima
+        do limite do setor, ou fator de potência abaixo de 0,92.
+      </p>
+    </section>
+  {% else %}
+    <p class="observacao">
+      Mostrando {{ alertas|length }} de {{ total }} alerta{{ '' if total == 1 else 's' }}
+      — página {{ pagina }} de {{ ultima_pagina }}.
+    </p>
+
+    <div class="tabela-rolavel">
+      <table class="tabela">
+        <caption class="sr-apenas">Alertas, do mais recente para o mais antigo</caption>
+        <thead>
+          <tr>
+            <th scope="col">Tipo</th>
+            <th scope="col">Setor / medidor</th>
+            <th scope="col">Quando</th>
+            <th scope="col">Observado</th>
+            <th scope="col">Limite</th>
+            <th scope="col">Situação</th>
+            <th scope="col">Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for alerta in alertas %}
+            <tr>
+              <td>
+                <span class="etiqueta etiqueta-{{ 'consumo' if alerta.tipo.value == 'CONSUMO_ACIMA_LIMITE' else 'fator' }}">
+                  {{ rotulo_do_tipo(alerta.tipo) }}
+                </span>
+              </td>
+              <td>
+                {{ alerta.leitura.medidor.setor.nome }}<br>
+                <code>{{ alerta.leitura.medidor.codigo }}</code>
+              </td>
+              <td>{{ alerta.leitura.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+              <td class="numero">{{ numero(alerta.valor_observado) }}</td>
+              <td class="numero">{{ numero(alerta.limite_referencia) }}</td>
+              <td>
+                {% if alerta.status.value == 'RESOLVIDO' %}
+                  <span class="etiqueta etiqueta-resolvido">Resolvido</span>
+                  <p class="observacao">
+                    {{ alerta.resolvido_em.strftime('%d/%m/%Y %H:%M') }}
+                    {%- if alerta.usuario_resolucao %} por {{ alerta.usuario_resolucao.nome }}{% endif %}
+                  </p>
+                {% else %}
+                  <span class="etiqueta etiqueta-aberto">Aberto</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if alerta.status.value == 'RESOLVIDO' %}
+                  <details>
+                    <summary>Observação</summary>
+                    <p class="observacao">{{ alerta.observacao_resolucao }}</p>
+                  </details>
+                {% elif current_user.e_gestor %}
+                  <details>
+                    <summary>Resolver</summary>
+                    <form class="formulario-resolver" method="post"
+                          action="{{ url_for('alertas.resolver', id_alerta=alerta.id) }}">
+                      <input type="hidden" name="voltar_para" value="{{ request.full_path }}">
+                      <label for="observacao-{{ alerta.id }}" class="sr-apenas">
+                        O que foi feito para resolver
+                      </label>
+                      <textarea id="observacao-{{ alerta.id }}" name="observacao" rows="2"
+                                maxlength="500" required
+                                placeholder="O que foi feito para resolver"></textarea>
+                      <button class="botao" type="submit">Marcar como resolvido</button>
+                    </form>
+                  </details>
+                {% else %}
+                  <span class="observacao">Só o gestor resolve</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if ultima_pagina > 1 %}
+      <nav class="paginacao" aria-label="Páginas de alertas">
+        {% if pagina > 1 %}
+          <a class="botao-secundario"
+             href="{{ url_for('alertas.lista', **dict(request.args, pagina=pagina - 1)) }}">
+            ← Anterior
+          </a>
+        {% endif %}
+        <span class="paginacao-posicao">Página {{ pagina }} de {{ ultima_pagina }}</span>
+        {% if pagina < ultima_pagina %}
+          <a class="botao-secundario"
+             href="{{ url_for('alertas.lista', **dict(request.args, pagina=pagina + 1)) }}">
+            Próxima →
+          </a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% endif %}
+{% endblock %}

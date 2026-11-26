@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block titulo %}GestEnergia — Início{% endblock %}
+
+{% block conteudo %}
+  <h1>GestEnergia</h1>
+
+  <p class="chamada">
+    Acompanhamento do consumo de energia por setor, com previsão dos próximos 15 minutos
+    e alertas automáticos de consumo acima do limite e de fator de potência baixo.
+  </p>
+
+  <section class="cartao">
+    <h2>Ambiente</h2>
+    <p>
+      A aplicação está de pé. Para conferir a conexão com o banco, abra
+      <a href="{{ url_for('painel.saude') }}"><code>/saude</code></a>.
+    </p>
+  </section>
+
+  <section class="cartao">
+    <h2>Em construção</h2>
+    <p>O login com perfis OPERADOR e GESTOR já funciona (issue #10). Falta:</p>
+    <ul>
+      <li>Cadastro de setores e medidores — issues #16 e #17</li>
+      <li>Registro e importação de leituras — issues #18 e #19</li>
+      <li>Painel de consumo real × previsto e alertas — issue #20</li>
+    </ul>
+  </section>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% set editando = medidor is not none %}
+
+{% block titulo %}
+  GestEnergia — {{ 'Editar medidor' if editando else 'Novo medidor' }}
+{% endblock %}
+
+{% block conteudo %}
+  <h1>{{ 'Editar medidor' if editando else 'Novo medidor' }}</h1>
+
+  {% if not setores %}
+    <section class="cartao cartao-estreito">
+      <p>Não há setor ativo para receber um medidor.</p>
+      <p class="observacao">
+        Todo medidor pertence a um setor ativo. Cadastre ou reative um
+        <a href="{{ url_for('setores.lista') }}">setor</a> primeiro.
+      </p>
+    </section>
+  {% else %}
+    <section class="cartao cartao-estreito">
+      <form class="formulario" method="post">
+        <div class="campo">
+          <label for="codigo">Código <span class="obrigatorio">*</span></label>
+          <input id="codigo" name="codigo" type="text" maxlength="60"
+                 placeholder="ex.: MED-PROD" value="{{ dados.get('codigo', '') }}"
+                 required autofocus>
+          <p class="ajuda">
+            Único no sistema e gravado em <strong>maiúsculas</strong>.
+          </p>
+        </div>
+
+        <div class="campo">
+          <label for="id_setor">Setor <span class="obrigatorio">*</span></label>
+          <select id="id_setor" name="id_setor" required>
+            <option value="">— escolha o setor —</option>
+            {% for setor in setores %}
+              <option value="{{ setor.id }}"
+                      {{ 'selected' if dados.get('id_setor') == setor.id|string }}>
+                {{ setor.nome }}{{ ' (desativado)' if not setor.ativo }}
+              </option>
+            {% endfor %}
+          </select>
+          <p class="ajuda">
+            O setor define qual modelo prevê o consumo deste medidor e qual limite vale
+            para o alerta.
+          </p>
+        </div>
+
+        <div class="campo">
+          <label for="descricao">Descrição</label>
+          <input id="descricao" name="descricao" type="text" maxlength="255"
+                 value="{{ dados.get('descricao', '') }}">
+        </div>
+
+        <div class="acoes-formulario">
+          <button class="botao" type="submit">{{ 'Salvar' if editando else 'Cadastrar' }}</button>
+          <a href="{{ url_for('medidores.lista') }}">Cancelar</a>
+        </div>
+      </form>
+    </section>
+  {% endif %}
+{% endblock %}

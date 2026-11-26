@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block titulo %}GestEnergia — Medidores{% endblock %}
+
+{% block conteudo %}
+  <div class="cabecalho-pagina">
+    <h1>Medidores</h1>
+    {% if current_user.e_gestor %}
+      <a class="botao" href="{{ url_for('medidores.novo') }}">Novo medidor</a>
+    {% endif %}
+  </div>
+
+  {% if not medidores %}
+    <section class="cartao">
+      <p>Nenhum medidor cadastrado.</p>
+      {% if current_user.e_gestor %}
+        <p class="observacao">
+          Todo medidor pertence a um setor, então cadastre um
+          <a href="{{ url_for('setores.lista') }}">setor</a> primeiro.
+        </p>
+      {% else %}
+        <p class="observacao">Cadastrar medidores é uma ação do perfil GESTOR.</p>
+      {% endif %}
+    </section>
+  {% else %}
+    <div class="tabela-rolavel">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Setor</th>
+            <th class="numero">Leituras</th>
+            <th>Situação</th>
+            {% if current_user.e_gestor %}<th>Ações</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for medidor in medidores %}
+            <tr class="{{ 'linha-inativa' if not medidor.ativo }}">
+              <td>
+                <strong><code>{{ medidor.codigo }}</code></strong>
+                {% if medidor.descricao %}
+                  <div class="observacao">{{ medidor.descricao }}</div>
+                {% endif %}
+              </td>
+              <td>
+                {{ medidor.setor.nome }}
+                {% if not medidor.setor.ativo %}
+                  <span class="etiqueta etiqueta-aviso"
+                        title="O setor foi desativado depois; o vínculo foi preservado">
+                    setor desativado
+                  </span>
+                {% endif %}
+              </td>
+              <td class="numero" data-leituras="{{ leituras[medidor.id] }}">
+                {{ leituras[medidor.id] }}
+              </td>
+              <td>
+                {% if medidor.ativo %}
+                  <span class="situacao situacao-ativa">ativo</span>
+                {% else %}
+                  <span class="situacao situacao-inativa">desativado</span>
+                {% endif %}
+              </td>
+              {% if current_user.e_gestor %}
+                <td class="acoes">
+                  <a href="{{ url_for('medidores.editar', id_medidor=medidor.id) }}">Editar</a>
+                  <form method="post"
+                        action="{{ url_for('medidores.alternar_ativo', id_medidor=medidor.id) }}">
+                    <button class="botao-texto" type="submit">
+                      {{ 'Reativar' if not medidor.ativo else 'Desativar' }}
+                    </button>
+                  </form>
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <section class="cartao">
+      <h2>Como o medidor se liga ao resto</h2>
+      <ul>
+        <li>
+          O <strong>setor do medidor</strong> é o que define qual modelo prevê o consumo e qual
+          limite vale para o alerta. Trocar o setor de um medidor muda as duas coisas.
+        </li>
+        <li>
+          Não se cadastra nem se move medidor para <strong>setor desativado</strong>. Mas um medidor
+          cujo setor foi desativado <em>depois</em> mantém o vínculo — desativar setor não apaga
+          histórico — e aparece aqui com o aviso.
+        </li>
+        <li>
+          <strong>Desativar não apaga leituras:</strong> o medidor só deixa de ser oferecido no
+          registro de leitura.
+        </li>
+      </ul>
+    </section>
+  {% endif %}
+{% endblock %}

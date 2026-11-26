@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}GestEnergia{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+</head>
+<body>
+  <header class="topo">
+    <a class="marca" href="{{ url_for('painel.inicio') }}">GestEnergia</a>
+    <nav class="menu">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('painel.painel') }}">Painel</a>
+        <a href="{{ url_for('setores.lista') }}">Setores</a>
+        <a href="{{ url_for('medidores.lista') }}">Medidores</a>
+        <a href="{{ url_for('leituras.lista') }}">Leituras</a>
+        <a href="{{ url_for('alertas.lista') }}">Alertas</a>
+      {% else %}
+        <span class="menu-futuro" title="Entre para ver">Painel</span>
+        <span class="menu-futuro" title="Entre para ver">Setores</span>
+        <span class="menu-futuro" title="Entre para ver">Medidores</span>
+        <span class="menu-futuro" title="Entre para ver">Leituras</span>
+        <span class="menu-futuro" title="Entre para ver">Alertas</span>
+      {% endif %}
+    </nav>
+
+    {# Area da sessao (issue #10). #}
+    <div class="sessao">
+      {% if current_user.is_authenticated %}
+        <a class="sessao-usuario" href="{{ url_for('painel.conta') }}">
+          {{ current_user.nome }} <span class="sessao-perfil">{{ current_user.perfil.value }}</span>
+        </a>
+        <a class="sessao-acao" href="{{ url_for('auth.logout') }}">Sair</a>
+      {% else %}
+        <a class="sessao-acao" href="{{ url_for('auth.login') }}">Entrar</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="conteudo">
+    {# Area de mensagens: flash de sucesso e de erro. #}
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+      {% if mensagens %}
+        <div class="mensagens">
+          {% for categoria, texto in mensagens %}
+            <p class="mensagem mensagem-{{ categoria }}">{{ texto }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <footer class="rodape">
+    <p>GestEnergia — Projeto A3, Universidade Potiguar</p>
+  </footer>
+
+  {# Scripts no fim do corpo, para o HTML aparecer antes de carregar o Chart.js.
+     Tudo servido pelo proprio sistema: nenhuma biblioteca de CDN. #}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block titulo %}GestEnergia — Setores{% endblock %}
+
+{% block conteudo %}
+  <div class="cabecalho-pagina">
+    <h1>Setores</h1>
+    {% if current_user.e_gestor %}
+      <a class="botao" href="{{ url_for('setores.novo') }}">Novo setor</a>
+    {% endif %}
+  </div>
+
+  {% if not setores %}
+    <section class="cartao">
+      <p>Nenhum setor cadastrado.</p>
+      {% if not current_user.e_gestor %}
+        <p class="observacao">Cadastrar setores é uma ação do perfil GESTOR.</p>
+      {% endif %}
+    </section>
+  {% else %}
+    <div class="tabela-rolavel">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th>Setor</th>
+            <th class="numero">Limite (kWh)</th>
+            <th>Modelo</th>
+            <th class="numero">Medidores</th>
+            <th>Situação</th>
+            {% if current_user.e_gestor %}<th>Ações</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for setor in setores %}
+            <tr class="{{ 'linha-inativa' if not setor.ativo }}">
+              <td>
+                <strong>{{ setor.nome }}</strong>
+                {% if setor.tem_fator_potencia %}
+                  <span class="etiqueta" title="Este setor mede fator de potência">fator de potência</span>
+                {% endif %}
+                {% if setor.descricao %}<div class="observacao">{{ setor.descricao }}</div>{% endif %}
+              </td>
+              <td class="numero">
+                {% if setor.limite_consumo_kwh is none %}
+                  <span class="observacao" title="Sem limite, não gera alerta de consumo">sem limite</span>
+                {% else %}
+                  {{ ('%.3f' % setor.limite_consumo_kwh)|replace('.', ',') }}
+                {% endif %}
+              </td>
+              <td>
+                {% if setor.arquivo_modelo %}
+                  <code>{{ setor.arquivo_modelo }}</code>
+                {% else %}
+                  <span class="observacao">sem modelo</span>
+                {% endif %}
+              </td>
+              <td class="numero" data-medidores="{{ medidores[setor.id] }}">{{ medidores[setor.id] }}</td>
+              <td>
+                {% if setor.ativo %}
+                  <span class="situacao situacao-ativa">ativo</span>
+                {% else %}
+                  <span class="situacao situacao-inativa">desativado</span>
+                {% endif %}
+              </td>
+              {% if current_user.e_gestor %}
+                <td class="acoes">
+                  <a href="{{ url_for('setores.editar', id_setor=setor.id) }}">Editar</a>
+                  <form method="post" action="{{ url_for('setores.alternar_ativo', id_setor=setor.id) }}">
+                    <button class="botao-texto" type="submit">
+                      {{ 'Reativar' if not setor.ativo else 'Desativar' }}
+                    </button>
+                  </form>
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <section class="cartao">
+      <h2>Sobre o limite e o modelo</h2>
+      <ul>
+        <li>
+          O <strong>limite</strong> de cada setor é o <strong>percentil 99</strong> do consumo daquele
+          setor no período de treino (issue #44). Enquanto estiver
+          <strong>sem limite</strong>, o setor <strong>não gera</strong> alerta de consumo acima do
+          limite — e isso é proposital: zero faria todo setor alertar sempre.
+        </li>
+        <li>
+          Cada setor aponta para o <strong>seu próprio</strong> arquivo de modelo em <code>ml/</code>.
+          Setor sem modelo, ou com o arquivo ausente, mostra “sem previsão ainda” em vez de dar erro.
+        </li>
+        <li>
+          <strong>Desativar não apaga nada:</strong> medidores, leituras e alertas continuam no banco.
+          O setor só deixa de ser oferecido em cadastros novos.
+        </li>
+      </ul>
+    </section>
+  {% endif %}
+{% endblock %}

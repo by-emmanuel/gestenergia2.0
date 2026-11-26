@@ -1,0 +1,17 @@
+.git
+.gitignore
+.env
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.ipynb_checkpoints
+.DS_Store
+.devcontainer
+.claude
+notebooks
+docs
+issues
+data/bruto
+data/processado
