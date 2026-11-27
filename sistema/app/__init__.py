@@ -89,3 +89,16 @@ def _registrar_blueprints(app: Flask) -> None:
     app.register_blueprint(medidores_bp)
     app.register_blueprint(painel_bp)
     app.register_blueprint(setores_bp)
+
+    @app.context_processor
+    def revelar_menu():
+        """Logo depois de entrar, a primeira pagina anima os itens do menu.
+
+        O login e o cadastro deixam a marca na sessao; aqui ela e lida e
+        apagada, entao a animacao roda uma vez so, e nao a cada pagina.
+        """
+        from flask import session
+
+        from .routes.auth import CHAVE_REVELAR_MENU
+
+        return {"revelar_menu": bool(session.pop(CHAVE_REVELAR_MENU, False))}

@@ -11,7 +11,8 @@ from functools import wraps
 
 from flask import abort, flash, redirect, url_for
 from flask_login import current_user
-from werkzeug.security import check_password_hash
+from sqlalchemy.exc import IntegrityError
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..models import PerfilUsuario, Usuario
 from ..repositories import usuario_repository
@@ -72,3 +73,66 @@ def somente_gestor(rota):
         return rota(*args, **kwargs)
 
     return envelope
+
+
+# ---------------------------------------------------------------------------
+# Cadastro publico
+# ---------------------------------------------------------------------------
+
+SENHA_MINIMA = 8
+NOME_MAXIMO = 120   # tamanho da coluna usuarios_sistema.nome
+EMAIL_MAXIMO = 180  # tamanho da coluna usuarios_sistema.email
+ERRO_EMAIL_EM_USO = "Já existe uma conta com este e-mail."
+
+
+def cadastrar(nome: str, email: str, senha: str, confirmacao: str) -> tuple[Usuario | None, str | None]:
+    """Cria uma conta pelo formulario publico de cadastro.
+
+    Toda conta criada aqui nasce OPERADOR (regra 7). O perfil NAO vem do
+    formulario: se viesse, qualquer visitante poderia se cadastrar como GESTOR
+    e passar a configurar limites e resolver alertas. Promover a gestor e uma
+    decisao administrativa, feita fora da tela publica.
+
+    Devolve (usuario, None) quando cria, ou (None, mensagem) quando recusa.
+    """
+    nome_limpo = " ".join((nome or "").split())
+    email_limpo = (email or "").strip().lower()
+    senha = senha or ""
+
+    if not nome_limpo:
+        return None, "Informe o seu nome."
+    if len(nome_limpo) > NOME_MAXIMO:
+        return None, f"O nome pode ter no máximo {NOME_MAXIMO} caracteres."
+    if not _email_valido(email_limpo):
+        return None, "Informe um e-mail válido."
+    if len(email_limpo) > EMAIL_MAXIMO:
+        return None, f"O e-mail pode ter no máximo {EMAIL_MAXIMO} caracteres."
+    if len(senha) < SENHA_MINIMA:
+        return None, f"A senha precisa ter pelo menos {SENHA_MINIMA} caracteres."
+    if senha != (confirmacao or ""):
+        return None, "A confirmação não confere com a senha."
+    if usuario_repository.buscar_por_email(email_limpo) is not None:
+        return None, ERRO_EMAIL_EM_USO
+
+    usuario = Usuario(
+        nome=nome_limpo,
+        email=email_limpo,
+        senha_hash=generate_password_hash(senha),
+        perfil=PerfilUsuario.OPERADOR,
+        ativo=True,
+    )
+    try:
+        return usuario_repository.salvar(usuario), None
+    except IntegrityError:
+        # Dois cadastros simultaneos com o mesmo e-mail: a chave unica do banco
+        # segura o segundo, que chegou depois da consulta acima.
+        usuario_repository.desfazer()
+        return None, ERRO_EMAIL_EM_USO
+
+
+def _email_valido(email: str) -> bool:
+    """Conferencia de formato simples: algo@dominio.tld, sem espacos."""
+    if not email or " " in email or email.count("@") != 1:
+        return False
+    local, dominio = email.split("@")
+    return bool(local) and "." in dominio.strip(".") and not dominio.startswith(".")

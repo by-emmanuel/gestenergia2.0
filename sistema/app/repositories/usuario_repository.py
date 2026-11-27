@@ -22,3 +22,16 @@ def buscar_por_email(email: str) -> Usuario | None:
 def buscar_por_id(id_usuario: int) -> Usuario | None:
     """Devolve o usuario daquele id, ou None. Usado pelo Flask-Login."""
     return sessao().get(Usuario, id_usuario)
+
+
+def salvar(usuario: Usuario) -> Usuario:
+    """Grava o usuario (novo ou alterado) e devolve o mesmo objeto, ja com id."""
+    sessao_atual = sessao()
+    sessao_atual.add(usuario)
+    sessao_atual.commit()
+    return usuario
+
+
+def desfazer() -> None:
+    """Descarta a transacao pendente, depois de uma falha ao gravar."""
+    sessao().rollback()

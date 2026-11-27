@@ -5,35 +5,90 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}GestEnergia{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+  {# Favicon: SVG nitido em qualquer tamanho; PNG para quem nao le SVG e
+     icone de atalho na tela inicial do celular. #}
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icones/favicon.svg') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icones/favicon-32.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icones/favicon-180.png') }}">
+  <meta name="theme-color" content="#0f1f1c">
 </head>
-<body>
-  <header class="topo">
-    <a class="marca" href="{{ url_for('painel.inicio') }}">GestEnergia</a>
-    <nav class="menu">
-      {% if current_user.is_authenticated %}
-        <a href="{{ url_for('painel.painel') }}">Painel</a>
-        <a href="{{ url_for('setores.lista') }}">Setores</a>
-        <a href="{{ url_for('medidores.lista') }}">Medidores</a>
-        <a href="{{ url_for('leituras.lista') }}">Leituras</a>
-        <a href="{{ url_for('alertas.lista') }}">Alertas</a>
-      {% else %}
-        <span class="menu-futuro" title="Entre para ver">Painel</span>
-        <span class="menu-futuro" title="Entre para ver">Setores</span>
-        <span class="menu-futuro" title="Entre para ver">Medidores</span>
-        <span class="menu-futuro" title="Entre para ver">Leituras</span>
-        <span class="menu-futuro" title="Entre para ver">Alertas</span>
-      {% endif %}
-    </nav>
+<body class="{% block classe_pagina %}pagina-interna{% endblock %}">
+  {# Telas internas: faixa com o mesmo cenario da pagina inicial, atras do
+     menu e do titulo. As paginas com hero ja desenham o cenario inteiro. #}
+  {% if self.classe_pagina() == 'pagina-interna' %}
+    <div class="faixa" aria-hidden="true">{% include "_cenario.html" %}</div>
+  {% endif %}
+  <header class="topo{% if revelar_menu and current_user.is_authenticated %} topo-revelar{% endif %}">
+    <a class="marca" href="{{ url_for('painel.inicio') }}">
+      {# Simbolo: o mostrador de um medidor (marcacoes em volta) com um raio
+         desenhado a traco. O raio se desenha ao abrir a pagina. #}
+      <span class="marca-icone" aria-hidden="true">
+        <svg viewBox="0 0 40 40">
+          <defs>
+            <linearGradient id="marca-fundo" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#dcff6e"/>
+              <stop offset="1" stop-color="#9ed435"/>
+            </linearGradient>
+          </defs>
+          <circle cx="20" cy="20" r="19" fill="url(#marca-fundo)"/>
+          <circle class="marca-brilho" cx="14" cy="11" r="7" fill="#fff" opacity="0.35"/>
+          <circle class="marca-mostrador" cx="20" cy="20" r="15" fill="none"
+                  stroke="#0f1f1c" stroke-opacity="0.35" stroke-width="2"
+                  stroke-dasharray="1.2 4.3" stroke-linecap="round"/>
+          <path class="marca-raio" pathLength="100"
+                d="M22.5 7.5 L12.5 21.5 H19.5 L17.5 32.5 L27.5 18 H20.5 Z"
+                fill="#0f1f1c" stroke="#0f1f1c" stroke-width="2.2"
+                stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="marca-faisca" d="M29 9.5 l2.5 -2.5 M31 13 h3 M26.5 7 v-3"
+                fill="none" stroke="#0f1f1c" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="marca-nome">Gest<span>Energia</span></span>
+    </a>
+    {# Menu so para quem entrou: o visitante tem o logo (que leva ao inicio) e
+       os botoes de acesso. Na primeira pagina depois do login ou do cadastro,
+       os itens chegam com animacao (.topo-revelar).
+       Item da pagina atual em destaque (pilula), conforme o endpoint. #}
+    {% set ep = request.endpoint or '' %}
+    {% if current_user.is_authenticated %}
+      <nav class="menu">
+        <a href="{{ url_for('painel.inicio') }}"
+           {% if ep == 'painel.inicio' %}class="ativo" aria-current="page"{% endif %}>Início</a>
+        <a href="{{ url_for('painel.painel') }}"
+           {% if ep == 'painel.painel' %}class="ativo" aria-current="page"{% endif %}>Painel</a>
+        <a href="{{ url_for('setores.lista') }}"
+           {% if ep.startswith('setores.') %}class="ativo" aria-current="page"{% endif %}>Setores</a>
+        <a href="{{ url_for('medidores.lista') }}"
+           {% if ep.startswith('medidores.') %}class="ativo" aria-current="page"{% endif %}>Medidores</a>
+        <a href="{{ url_for('leituras.lista') }}"
+           {% if ep.startswith('leituras.') %}class="ativo" aria-current="page"{% endif %}>Leituras</a>
+        <a href="{{ url_for('alertas.lista') }}"
+           {% if ep.startswith('alertas.') %}class="ativo" aria-current="page"{% endif %}>Alertas</a>
+      </nav>
+    {% endif %}
 
     {# Area da sessao (issue #10). #}
     <div class="sessao">
       {% if current_user.is_authenticated %}
-        <a class="sessao-usuario" href="{{ url_for('painel.conta') }}">
-          {{ current_user.nome }} <span class="sessao-perfil">{{ current_user.perfil.value }}</span>
+        {# Cracha do usuario: avatar com as iniciais, nome e perfil. Leva a
+           "Minha conta". A cor do avatar e do selo muda com o perfil. #}
+        {% set partes_do_nome = current_user.nome.split() %}
+        {% set iniciais = (partes_do_nome[0][0] ~ (partes_do_nome[-1][0] if partes_do_nome|length > 1 else ''))|upper %}
+        <a class="sessao-usuario cracha cracha-{{ current_user.perfil.value|lower }}"
+           href="{{ url_for('painel.conta') }}" title="Minha conta">
+          <span class="cracha-avatar" aria-hidden="true">{{ iniciais }}</span>
+          <span class="cracha-textos">
+            <span class="cracha-nome">{{ current_user.nome }}</span>
+            <span class="sessao-perfil cracha-perfil">{{ current_user.perfil.value }}</span>
+          </span>
         </a>
-        <a class="sessao-acao" href="{{ url_for('auth.logout') }}">Sair</a>
+        <a class="sessao-acao sessao-sair" href="{{ url_for('auth.logout') }}">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 4H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M12 6l4 4-4 4M16 10H8"/></svg>
+          Sair
+        </a>
       {% else %}
-        <a class="sessao-acao" href="{{ url_for('auth.login') }}">Entrar</a>
+        <a class="sessao-cadastro" href="{{ url_for('auth.cadastro') }}">Criar conta</a>
+        <a class="sessao-acao sessao-entrar" href="{{ url_for('auth.login') }}">Entrar</a>
       {% endif %}
     </div>
   </header>
@@ -59,6 +114,7 @@
 
   {# Scripts no fim do corpo, para o HTML aparecer antes de carregar o Chart.js.
      Tudo servido pelo proprio sistema: nenhuma biblioteca de CDN. #}
+  <script src="{{ url_for('static', filename='js/menu.js') }}" defer></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

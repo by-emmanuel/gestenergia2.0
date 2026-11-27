@@ -5,7 +5,9 @@ verificacao de saude. O painel de consumo real x previsto e a lista de alertas
 sao a issue #20.
 """
 
-from flask import Blueprint, current_app, jsonify, render_template, request
+import os
+
+from flask import Blueprint, current_app, jsonify, render_template, request, send_from_directory
 from flask_login import current_user, login_required
 
 from ..banco import motor
@@ -19,6 +21,17 @@ bp = Blueprint("painel", __name__)
 def inicio():
     """Pagina inicial do sistema. Publica: e a porta de entrada."""
     return render_template("inicio.html")
+
+
+@bp.route("/favicon.ico")
+def favicon():
+    """Responde ao pedido automatico do navegador por /favicon.ico.
+
+    As paginas ja apontam para o favicon em static/icones; esta rota so evita
+    o 404 nos logs quando o navegador pede o endereco padrao por conta propria.
+    """
+    pasta = os.path.join(current_app.static_folder, "icones")
+    return send_from_directory(pasta, "favicon-32.png", mimetype="image/png")
 
 
 @bp.route("/conta")
